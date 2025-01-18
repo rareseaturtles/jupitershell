@@ -11,7 +11,7 @@
             background: url('https://i.ibb.co/gV63YjH/Background.jpg') no-repeat center center fixed;
             background-size: cover;
             color: white;
-            overflow: hidden; /* Prevent scrolling if moons overlap */
+            overflow: hidden;
         }
         h1 {
             font-size: 3em;
@@ -23,9 +23,15 @@
             margin-bottom: 30px;
             text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
         }
+        .moon-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 30px;
+        }
         .moon {
-            display: inline-block;
-            position: absolute;
+            position: relative;
             width: 100px;
             height: 100px;
             background: url('https://i.ibb.co/NnPgLsJ/Moons.png') no-repeat center center;
@@ -36,6 +42,15 @@
         }
         .moon:hover {
             transform: scale(1.2);
+        }
+        .label {
+            position: absolute;
+            bottom: -20px;
+            width: 100%;
+            text-align: center;
+            font-size: 1em;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
         }
         .output {
             margin-top: 20px;
@@ -51,7 +66,7 @@
     <h1>Jupiter Turtle Cipher</h1>
     <p>Click the moons in the correct order to reveal the hidden code:</p>
 
-    <div id="moons"></div>
+    <div class="moon-container" id="moons"></div>
 
     <div class="output" id="output">Encrypted message will appear here!</div>
 
@@ -60,9 +75,6 @@
         const fakeMoons = ["Titanus", "Oceanus", "Galileus", "Tortuga"];
         const allMoons = [...realMoons, ...fakeMoons];
 
-        // Shuffle the moon order
-        const shuffledMoons = allMoons.sort(() => Math.random() - 0.5);
-
         // Correct sequence remains the same
         const correctSequence = ["Io", "Europa", "Ganymede", "Callisto"];
         let userSequence = [];
@@ -70,45 +82,19 @@
         const moonContainer = document.getElementById('moons');
         const output = document.getElementById('output');
 
-        // Function to ensure moons do not overlap
-        const generateUniquePosition = (existingPositions, maxWidth, maxHeight) => {
-            let top, left, overlap;
-            const buffer = 150; // Minimum distance between moons
-            const headerHeight = 150; // Avoid overlap with header
-            do {
-                overlap = false;
-                top = Math.random() * (maxHeight - headerHeight - buffer) + headerHeight;
-                left = Math.random() * (maxWidth - buffer);
-
-                for (const pos of existingPositions) {
-                    const dx = pos.left - left;
-                    const dy = pos.top - top;
-                    if (Math.sqrt(dx * dx + dy * dy) < buffer) {
-                        overlap = true;
-                        break;
-                    }
-                }
-            } while (overlap);
-
-            return { top, left };
-        };
-
-        const existingPositions = [];
-        const maxWidth = window.innerWidth;
-        const maxHeight = window.innerHeight;
-
-        // Randomize positions and create moon elements
-        shuffledMoons.forEach(name => {
+        // Create moon elements with labels
+        allMoons.forEach(name => {
             const moon = document.createElement('div');
             moon.className = 'moon';
             moon.setAttribute('data-name', name);
 
-            const position = generateUniquePosition(existingPositions, maxWidth, maxHeight);
-            existingPositions.push(position);
+            // Add label to moon
+            const label = document.createElement('div');
+            label.className = 'label';
+            label.textContent = name;
+            moon.appendChild(label);
 
-            moon.style.top = position.top + "px";
-            moon.style.left = position.left + "px";
-
+            // Add click event
             moon.addEventListener('click', () => {
                 userSequence.push(name);
 
