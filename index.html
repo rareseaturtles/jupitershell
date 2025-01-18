@@ -10,6 +10,7 @@
             text-align: center;
             background: linear-gradient(to bottom, #001f4d, #004080);
             color: white;
+            overflow: hidden; /* Prevent scrolling if moons overlap */
         }
         .moon {
             display: inline-block;
@@ -58,13 +59,43 @@
         const moonContainer = document.getElementById('moons');
         const output = document.getElementById('output');
 
+        // Function to ensure moons do not overlap
+        const generateUniquePosition = (existingPositions, maxWidth, maxHeight) => {
+            let top, left, overlap;
+            const buffer = 120; // Minimum distance between moons
+            do {
+                overlap = false;
+                top = Math.random() * (maxHeight - buffer);
+                left = Math.random() * (maxWidth - buffer);
+
+                for (const pos of existingPositions) {
+                    const dx = pos.left - left;
+                    const dy = pos.top - top;
+                    if (Math.sqrt(dx * dx + dy * dy) < buffer) {
+                        overlap = true;
+                        break;
+                    }
+                }
+            } while (overlap);
+
+            return { top, left };
+        };
+
+        const existingPositions = [];
+        const maxWidth = window.innerWidth;
+        const maxHeight = window.innerHeight;
+
         // Randomize positions and create moon elements
         shuffledMoons.forEach(name => {
             const moon = document.createElement('div');
             moon.className = 'moon';
             moon.textContent = name;
-            moon.style.top = Math.random() * 80 + "%"; // Random vertical position
-            moon.style.left = Math.random() * 80 + "%"; // Random horizontal position
+
+            const position = generateUniquePosition(existingPositions, maxWidth, maxHeight);
+            existingPositions.push(position);
+
+            moon.style.top = position.top + "px";
+            moon.style.left = position.left + "px";
             moon.setAttribute('data-name', name);
 
             moon.addEventListener('click', () => {
