@@ -13,8 +13,12 @@
         }
         .moon {
             display: inline-block;
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            line-height: 100px;
+            text-align: center;
             margin: 10px;
-            padding: 20px;
             border-radius: 50%;
             background-color: #f0e68c;
             cursor: pointer;
@@ -35,25 +39,35 @@
     <h1>Jupiter Turtle Cipher</h1>
     <p>Click the moons in the correct order to reveal the hidden code:</p>
 
-    <div id="moons">
-        <div class="moon" data-name="Io">Io</div>
-        <div class="moon" data-name="Europa">Europa</div>
-        <div class="moon" data-name="Ganymede">Ganymede</div>
-        <div class="moon" data-name="Callisto">Callisto</div>
-    </div>
+    <div id="moons"></div>
 
     <div class="output" id="output">Encrypted message will appear here!</div>
 
     <script>
+        const realMoons = ["Io", "Europa", "Ganymede", "Callisto"];
+        const fakeMoons = ["Titanus", "Oceanus", "Galileus", "Tortuga"];
+        const allMoons = [...realMoons, ...fakeMoons];
+
+        // Shuffle the moon order
+        const shuffledMoons = allMoons.sort(() => Math.random() - 0.5);
+
+        // Correct sequence remains the same
         const correctSequence = ["Io", "Europa", "Ganymede", "Callisto"];
         let userSequence = [];
 
-        const moons = document.querySelectorAll('.moon');
+        const moonContainer = document.getElementById('moons');
         const output = document.getElementById('output');
 
-        moons.forEach(moon => {
+        // Randomize positions and create moon elements
+        shuffledMoons.forEach(name => {
+            const moon = document.createElement('div');
+            moon.className = 'moon';
+            moon.textContent = name;
+            moon.style.top = Math.random() * 80 + "%"; // Random vertical position
+            moon.style.left = Math.random() * 80 + "%"; // Random horizontal position
+            moon.setAttribute('data-name', name);
+
             moon.addEventListener('click', () => {
-                const name = moon.getAttribute('data-name');
                 userSequence.push(name);
 
                 // Check if the user sequence matches the correct sequence
@@ -67,6 +81,8 @@
                     userSequence = []; // Reset sequence
                 }
             });
+
+            moonContainer.appendChild(moon);
         });
     </script>
 </body>
