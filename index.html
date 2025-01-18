@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jupiter Turtle Cipher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to bottom, #001f4d, #004080);
+            color: white;
+        }
+        .moon {
+            display: inline-block;
+            margin: 10px;
+            padding: 20px;
+            border-radius: 50%;
+            background-color: #f0e68c;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .moon:hover {
+            transform: scale(1.2);
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid white;
+            background: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <h1>Jupiter Turtle Cipher</h1>
+    <p>Click the moons in the correct order to reveal the hidden code:</p>
+
+    <div id="moons">
+        <div class="moon" data-name="Io">Io</div>
+        <div class="moon" data-name="Europa">Europa</div>
+        <div class="moon" data-name="Ganymede">Ganymede</div>
+        <div class="moon" data-name="Callisto">Callisto</div>
+    </div>
+
+    <div class="output" id="output">Encrypted message will appear here!</div>
+
+    <script>
+        const correctSequence = ["Io", "Europa", "Ganymede", "Callisto"];
+        let userSequence = [];
+
+        const moons = document.querySelectorAll('.moon');
+        const output = document.getElementById('output');
+
+        moons.forEach(moon => {
+            moon.addEventListener('click', () => {
+                const name = moon.getAttribute('data-name');
+                userSequence.push(name);
+
+                // Check if the user sequence matches the correct sequence
+                if (userSequence.length === correctSequence.length) {
+                    if (JSON.stringify(userSequence) === JSON.stringify(correctSequence)) {
+                        output.textContent = "Congratulations! Here's the hidden code: \n" +
+                            "Encrypted Message: I am giant and stormy, yet I guide turtles across the sea.";
+                    } else {
+                        output.textContent = "Incorrect sequence! Try again.";
+                    }
+                    userSequence = []; // Reset sequence
+                }
+            });
+        });
+    </script>
+</body>
+</html>
