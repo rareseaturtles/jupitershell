@@ -75,6 +75,9 @@
         const fakeMoons = ["Titanus", "Oceanus", "Galileus", "Tortuga"];
         const allMoons = [...realMoons, ...fakeMoons];
 
+        // Shuffle the display order
+        const shuffledMoons = allMoons.sort(() => Math.random() - 0.5);
+
         // Correct sequence remains the same
         const correctSequence = ["Io", "Europa", "Ganymede", "Callisto"];
         let userSequence = [];
@@ -83,7 +86,7 @@
         const output = document.getElementById('output');
 
         // Create moon elements with labels
-        allMoons.forEach(name => {
+        shuffledMoons.forEach(name => {
             const moon = document.createElement('div');
             moon.className = 'moon';
             moon.setAttribute('data-name', name);
