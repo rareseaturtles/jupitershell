@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jupiter Turtle Cipher</title>
+    <title>Turtle's Jupiter Cipher</title>
     <style>
         body {
             font-family: 'Verdana', sans-serif;
@@ -16,24 +16,24 @@
         }
 
         h1 {
-            font-size: 2em;
-            margin-top: 10px;
+            font-size: 2.5em;
+            margin-top: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
         }
 
         p {
-            font-size: 1em;
-            margin: 10px;
+            font-size: 1.2em;
+            margin: 15px;
             text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
         }
 
         .clue {
-            margin: 10px auto;
-            padding: 10px;
+            margin: 20px auto;
+            padding: 15px;
             max-width: 90%;
             border: 2px solid white;
             background: rgba(0, 0, 0, 0.7);
-            font-size: 1em;
+            font-size: 1.3em;
             text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
         }
 
@@ -41,15 +41,15 @@
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 10px;
-            margin: 10px auto;
-            max-width: 90%;
+            gap: 15px;
+            margin: 30px auto;
+            max-width: 95%;
         }
 
         .moon {
             position: relative;
-            width: 70px;
-            height: 70px;
+            width: 85px;
+            height: 85px;
             background: url('https://i.ibb.co/NnPgLsJ/Moons.png') no-repeat center center;
             background-size: cover;
             cursor: pointer;
@@ -63,21 +63,21 @@
 
         .label {
             position: absolute;
-            bottom: -15px;
+            bottom: -20px;
             width: 100%;
             text-align: center;
-            font-size: 0.8em;
+            font-size: 1em;
             color: white;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
         }
 
         .output {
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 20px;
+            padding: 15px;
             max-width: 90%;
             border: 1px solid white;
             background: rgba(0, 0, 0, 0.6);
-            font-size: 1em;
+            font-size: 1.2em;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
             word-wrap: break-word;
         }
@@ -93,21 +93,26 @@
             }
 
             .label {
-                font-size: 1em;
+                font-size: 1.2em;
             }
 
             .clue {
-                font-size: 1.2em;
+                font-size: 1.4em;
             }
 
             .output {
-                font-size: 1.2em;
+                font-size: 1.3em;
+            }
+
+            .moon-container {
+                gap: 20px;
+                margin-top: 40px;
             }
         }
     </style>
 </head>
 <body>
-    <h1>Jupiter Turtle Cipher</h1>
+    <h1>Turtle's Jupiter Cipher</h1>
     <p>Click the moons in the correct order to reveal the hidden code:</p>
 
     <!-- Clue Section -->
@@ -154,7 +159,7 @@
                 if (userSequence.length === correctSequence.length) {
                     if (JSON.stringify(userSequence) === JSON.stringify(correctSequence)) {
                         output.textContent = "Congratulations! Here's the hidden code: \n" +
-                            "Encrypted Message: I am giant and stormy, yet I guide turtles across the sea.";
+                            "Jupiter's Claim Code Message: 2jTVYDVUopBN";
                     } else {
                         output.textContent = "Incorrect sequence! Try again.";
                     }
