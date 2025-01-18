@@ -6,23 +6,32 @@
     <title>Jupiter Turtle Cipher</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Verdana', sans-serif;
             text-align: center;
-            background: linear-gradient(to bottom, #001f4d, #004080);
+            background: url('https://i.ibb.co/gV63YjH/Background.jpg') no-repeat center center fixed;
+            background-size: cover;
             color: white;
             overflow: hidden; /* Prevent scrolling if moons overlap */
+        }
+        h1 {
+            font-size: 3em;
+            margin-top: 20px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
         }
         .moon {
             display: inline-block;
             position: absolute;
             width: 100px;
             height: 100px;
-            line-height: 100px;
-            text-align: center;
-            margin: 10px;
-            border-radius: 50%;
-            background-color: #f0e68c;
+            background: url('https://i.ibb.co/NnPgLsJ/Moons.png') no-repeat center center;
+            background-size: cover;
             cursor: pointer;
+            border-radius: 50%;
             transition: transform 0.2s;
         }
         .moon:hover {
@@ -32,7 +41,9 @@
             margin-top: 20px;
             padding: 10px;
             border: 1px solid white;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
+            font-size: 1.2em;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
         }
     </style>
 </head>
@@ -62,10 +73,11 @@
         // Function to ensure moons do not overlap
         const generateUniquePosition = (existingPositions, maxWidth, maxHeight) => {
             let top, left, overlap;
-            const buffer = 120; // Minimum distance between moons
+            const buffer = 150; // Minimum distance between moons
+            const headerHeight = 150; // Avoid overlap with header
             do {
                 overlap = false;
-                top = Math.random() * (maxHeight - buffer);
+                top = Math.random() * (maxHeight - headerHeight - buffer) + headerHeight;
                 left = Math.random() * (maxWidth - buffer);
 
                 for (const pos of existingPositions) {
@@ -89,14 +101,13 @@
         shuffledMoons.forEach(name => {
             const moon = document.createElement('div');
             moon.className = 'moon';
-            moon.textContent = name;
+            moon.setAttribute('data-name', name);
 
             const position = generateUniquePosition(existingPositions, maxWidth, maxHeight);
             existingPositions.push(position);
 
             moon.style.top = position.top + "px";
             moon.style.left = position.left + "px";
-            moon.setAttribute('data-name', name);
 
             moon.addEventListener('click', () => {
                 userSequence.push(name);
