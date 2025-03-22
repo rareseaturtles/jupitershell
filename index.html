@@ -3,172 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turtle's Jupiter Cipher</title>
+    <title>AI Suspicious Behavior Detection</title>
     <style>
         body {
-            font-family: 'Verdana', sans-serif;
+            font-family: Arial, sans-serif;
             text-align: center;
-            background: url('https://i.ibb.co/gV63YjH/Background.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: white;
-            margin: 0;
-            padding: 0;
+            margin: 20px;
         }
-
-        h1 {
-            font-size: 2.5em;
-            margin-top: 20px;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
-        }
-
-        p {
-            font-size: 1.2em;
-            margin: 15px;
-            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
-        }
-
-        .clue {
-            margin: 20px auto;
-            padding: 15px;
-            max-width: 90%;
-            border: 2px solid white;
-            background: rgba(0, 0, 0, 0.7);
-            font-size: 1.3em;
-            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
-        }
-
-        .moon-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin: 30px auto;
-            max-width: 95%;
-        }
-
-        .moon {
-            position: relative;
-            width: 85px;
-            height: 85px;
-            background: url('https://i.ibb.co/NnPgLsJ/Moons.png') no-repeat center center;
-            background-size: cover;
-            cursor: pointer;
-            border-radius: 50%;
-            transition: transform 0.2s;
-        }
-
-        .moon:hover {
-            transform: scale(1.2);
-        }
-
-        .label {
-            position: absolute;
-            bottom: -20px;
+        video {
             width: 100%;
-            text-align: center;
-            font-size: 1em;
-            color: white;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            max-width: 640px;
+            height: auto;
+            border: 2px solid #000;
         }
-
-        .output {
+        #output {
             margin-top: 20px;
-            padding: 15px;
-            max-width: 90%;
-            border: 1px solid white;
-            background: rgba(0, 0, 0, 0.6);
-            font-size: 1.2em;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-            word-wrap: break-word;
+            font-size: 18px;
+            color: red;
         }
-
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 3em;
-            }
-
-            .moon {
-                width: 100px;
-                height: 100px;
-            }
-
-            .label {
-                font-size: 1.2em;
-            }
-
-            .clue {
-                font-size: 1.4em;
-            }
-
-            .output {
-                font-size: 1.3em;
-            }
-
-            .moon-container {
-                gap: 20px;
-                margin-top: 40px;
-            }
+        canvas {
+            display: none; /* Hidden canvas for drawing bounding boxes */
         }
     </style>
 </head>
 <body>
-    <h1>Turtle's Jupiter Cipher</h1>
-    <p>Click the moons in the correct order to reveal the hidden code:</p>
+    <h1>AI Suspicious Behavior Detection</h1>
+    <p>Accessing your phone's camera to detect suspicious behavior...</p>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    <div id="output">Loading AI model...</div>
 
-    <!-- Clue Section -->
-    <div class="clue">
-        "The closer you are to home, the earlier you get to enter the door."
-    </div>
-
-    <div class="moon-container" id="moons"></div>
-
-    <div class="output" id="output">Encrypted message will appear here!</div>
-
+    <!-- Load TensorFlow.js and COCO-SSD model -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
     <script>
-        const realMoons = ["Io", "Europa", "Ganymede", "Callisto"];
-        const fakeMoons = ["Titanus", "Oceanus", "Galileus", "Tortuga"];
-        const allMoons = [...realMoons, ...fakeMoons];
-
-        // Shuffle the display order
-        const shuffledMoons = allMoons.sort(() => Math.random() - 0.5);
-
-        // Correct sequence remains the same
-        const correctSequence = ["Io", "Europa", "Ganymede", "Callisto"];
-        let userSequence = [];
-
-        const moonContainer = document.getElementById('moons');
+        // Get elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
         const output = document.getElementById('output');
+        const ctx = canvas.getContext('2d');
 
-        // Create moon elements with labels
-        shuffledMoons.forEach(name => {
-            const moon = document.createElement('div');
-            moon.className = 'moon';
-            moon.setAttribute('data-name', name);
+        // Function to start the camera
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' } // Use rear camera; change to 'user' for front
+                });
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    video.play();
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    loadModel(); // Load AI model once video is ready
+                };
+            } catch (err) {
+                output.textContent = 'Error accessing camera: ' + err.message;
+            }
+        }
 
-            // Add label to moon
-            const label = document.createElement('div');
-            label.className = 'label';
-            label.textContent = name;
-            moon.appendChild(label);
+        // Load the COCO-SSD model and start detection
+        async function loadModel() {
+            try {
+                const model = await cocoSsd.load();
+                output.textContent = 'AI model loaded. Detecting objects...';
+                detectObjects(model);
+            } catch (err) {
+                output.textContent = 'Error loading model: ' + err.message;
+            }
+        }
 
-            // Add click event
-            moon.addEventListener('click', () => {
-                userSequence.push(name);
+        // Detect objects and check for suspicious behavior
+        async function detectObjects(model) {
+            const predictions = await model.detect(video);
+            
+            // Clear previous drawings
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Check if the user sequence matches the correct sequence
-                if (userSequence.length === correctSequence.length) {
-                    if (JSON.stringify(userSequence) === JSON.stringify(correctSequence)) {
-                        output.textContent = "Congratulations! Here's the hidden code: \n" +
-                            "Jupiter's Claim Code Message: 2jTVYDVUopBN";
-                    } else {
-                        output.textContent = "Incorrect sequence! Try again.";
+            let suspicious = false;
+            let message = 'No suspicious behavior detected.';
+
+            // Analyze predictions
+            predictions.forEach(prediction => {
+                const [x, y, width, height] = prediction.bbox;
+                const label = prediction.class;
+                const score = prediction.score;
+
+                // Draw bounding box
+                ctx.beginPath();
+                ctx.rect(x, y, width, height);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'green';
+                ctx.fillStyle = 'green';
+                ctx.stroke();
+                ctx.fillText(`${label} (${Math.round(score * 100)}%)`, x, y > 10 ? y - 5 : 10);
+
+                // Basic suspicious behavior logic
+                if (label === 'person' && score > 0.7) {
+                    // Check if person is near an object that could be "stolen"
+                    const nearbyObject = predictions.find(p => 
+                        p.class !== 'person' && 
+                        Math.abs(p.bbox[0] - x) < 100 && 
+                        Math.abs(p.bbox[1] - y) < 100 && 
+                        p.score > 0.6
+                    );
+                    if (nearbyObject) {
+                        suspicious = true;
+                        message = `Suspicious behavior detected: Person near ${nearbyObject.class}!`;
+                        ctx.strokeStyle = 'red'; // Highlight suspicious in red
+                        ctx.strokeRect(x, y, width, height);
                     }
-                    userSequence = []; // Reset sequence
                 }
             });
 
-            moonContainer.appendChild(moon);
-        });
+            // Update output message
+            output.textContent = message;
+            output.style.color = suspicious ? 'red' : 'green';
+
+            // Continuously detect
+            requestAnimationFrame(() => detectObjects(model));
+        }
+
+        // Start the camera when the page loads
+        window.onload = startCamera;
     </script>
 </body>
 </html>
