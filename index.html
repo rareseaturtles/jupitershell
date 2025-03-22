@@ -5,25 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Suspicious Behavior Detection</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-        }
-        video {
-            width: 100%;
-            max-width: 640px;
-            height: auto;
-            border: 2px solid #000;
-        }
-        #output {
-            margin-top: 20px;
-            font-size: 18px;
-            color: red;
-        }
-        canvas {
-            display: none; /* Hidden canvas for drawing bounding boxes */
-        }
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        video { width: 100%; max-width: 640px; height: auto; border: 2px solid #000; }
+        #output { margin-top: 20px; font-size: 18px; color: red; }
+        canvas { display: none; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px; }
     </style>
 </head>
 <body>
@@ -32,63 +18,65 @@
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
     <div id="output">Loading AI model...</div>
+    <button id="toggleBtn">Stop Detection</button>
 
-    <!-- Load TensorFlow.js and COCO-SSD model -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
     <script>
-        // Get elements
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const output = document.getElementById('output');
+        const toggleBtn = document.getElementById('toggleBtn');
         const ctx = canvas.getContext('2d');
+        let isDetecting = true;
+        let model;
+        let prevObjects = []; // Store objects from the previous frame
 
-        // Function to start the camera
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' } // Use rear camera; change to 'user' for front
+                    video: { facingMode: 'environment' }
                 });
                 video.srcObject = stream;
                 video.onloadedmetadata = () => {
                     video.play();
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
-                    loadModel(); // Load AI model once video is ready
+                    loadModel();
                 };
             } catch (err) {
                 output.textContent = 'Error accessing camera: ' + err.message;
             }
         }
 
-        // Load the COCO-SSD model and start detection
         async function loadModel() {
             try {
-                const model = await cocoSsd.load();
+                model = await cocoSsd.load();
                 output.textContent = 'AI model loaded. Detecting objects...';
-                detectObjects(model);
+                if (isDetecting) detectObjects();
             } catch (err) {
                 output.textContent = 'Error loading model: ' + err.message;
             }
         }
 
-        // Detect objects and check for suspicious behavior
-        async function detectObjects(model) {
+        async function detectObjects() {
+            if (!isDetecting) {
+                output.textContent = 'Detection stopped.';
+                return;
+            }
+
             const predictions = await model.detect(video);
-            
-            // Clear previous drawings
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             let suspicious = false;
             let message = 'No suspicious behavior detected.';
+            let currentObjects = [];
 
-            // Analyze predictions
             predictions.forEach(prediction => {
                 const [x, y, width, height] = prediction.bbox;
                 const label = prediction.class;
                 const score = prediction.score;
 
-                // Draw bounding box
                 ctx.beginPath();
                 ctx.rect(x, y, width, height);
                 ctx.lineWidth = 2;
@@ -97,9 +85,9 @@
                 ctx.stroke();
                 ctx.fillText(`${label} (${Math.round(score * 100)}%)`, x, y > 10 ? y - 5 : 10);
 
-                // Basic suspicious behavior logic
+                if (label !== 'person') currentObjects.push({ label, x, y, score });
+
                 if (label === 'person' && score > 0.7) {
-                    // Check if person is near an object that could be "stolen"
                     const nearbyObject = predictions.find(p => 
                         p.class !== 'person' && 
                         Math.abs(p.bbox[0] - x) < 100 && 
@@ -107,23 +95,45 @@
                         p.score > 0.6
                     );
                     if (nearbyObject) {
-                        suspicious = true;
-                        message = `Suspicious behavior detected: Person near ${nearbyObject.class}!`;
-                        ctx.strokeStyle = 'red'; // Highlight suspicious in red
+                        message = `Person near ${nearbyObject.class}.`;
+                        ctx.strokeStyle = 'yellow';
                         ctx.strokeRect(x, y, width, height);
                     }
                 }
             });
 
-            // Update output message
+            // Check for "pocketing" behavior
+            prevObjects.forEach(prev => {
+                const wasNearPerson = predictions.some(p => 
+                    p.class === 'person' && 
+                    Math.abs(p.bbox[0] - prev.x) < 100 && 
+                    Math.abs(p.bbox[1] - prev.y) < 100
+                );
+                const stillVisible = currentObjects.some(curr => 
+                    curr.label === prev.label && 
+                    Math.abs(curr.x - prev.x) < 50 && 
+                    Math.abs(curr.y - prev.y) < 50
+                );
+                if (wasNearPerson && !stillVisible) {
+                    suspicious = true;
+                    message = `Suspicious: ${prev.label} may have been pocketed!`;
+                }
+            });
+
+            prevObjects = currentObjects; // Update previous objects
+
             output.textContent = message;
             output.style.color = suspicious ? 'red' : 'green';
 
-            // Continuously detect
-            requestAnimationFrame(() => detectObjects(model));
+            if (isDetecting) requestAnimationFrame(detectObjects);
         }
 
-        // Start the camera when the page loads
+        toggleBtn.addEventListener('click', () => {
+            isDetecting = !isDetecting;
+            toggleBtn.textContent = isDetecting ? 'Stop Detection' : 'Start Detection';
+            if (isDetecting && model) detectObjects();
+        });
+
         window.onload = startCamera;
     </script>
 </body>
