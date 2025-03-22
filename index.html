@@ -19,6 +19,7 @@
     <canvas id="canvas"></canvas>
     <div id="output">Loading AI model...</div>
     <button id="toggleBtn">Stop Detection</button>
+    <button id="resetBtn">Reset Alert</button>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
@@ -27,10 +28,13 @@
         const canvas = document.getElementById('canvas');
         const output = document.getElementById('output');
         const toggleBtn = document.getElementById('toggleBtn');
+        const resetBtn = document.getElementById('resetBtn');
         const ctx = canvas.getContext('2d');
         let isDetecting = true;
         let model;
-        let prevObjects = []; // Store objects from the previous frame
+        let prevObjects = [];
+        let suspiciousState = false; // Persistent suspicious state
+        let suspiciousMessage = 'No suspicious behavior detected.'; // Persistent message
 
         async function startCamera() {
             try {
@@ -68,8 +72,6 @@
             const predictions = await model.detect(video);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            let suspicious = false;
-            let message = 'No suspicious behavior detected.';
             let currentObjects = [];
 
             predictions.forEach(prediction => {
@@ -95,35 +97,37 @@
                         p.score > 0.6
                     );
                     if (nearbyObject) {
-                        message = `Person near ${nearbyObject.class}.`;
                         ctx.strokeStyle = 'yellow';
                         ctx.strokeRect(x, y, width, height);
                     }
                 }
             });
 
-            // Check for "pocketing" behavior
-            prevObjects.forEach(prev => {
-                const wasNearPerson = predictions.some(p => 
-                    p.class === 'person' && 
-                    Math.abs(p.bbox[0] - prev.x) < 100 && 
-                    Math.abs(p.bbox[1] - prev.y) < 100
-                );
-                const stillVisible = currentObjects.some(curr => 
-                    curr.label === prev.label && 
-                    Math.abs(curr.x - prev.x) < 50 && 
-                    Math.abs(curr.y - prev.y) < 50
-                );
-                if (wasNearPerson && !stillVisible) {
-                    suspicious = true;
-                    message = `Suspicious: ${prev.label} may have been pocketed!`;
-                }
-            });
+            // Check for pocketing only if not already suspicious
+            if (!suspiciousState) {
+                prevObjects.forEach(prev => {
+                    const wasNearPerson = predictions.some(p => 
+                        p.class === 'person' && 
+                        Math.abs(p.bbox[0] - prev.x) < 100 && 
+                        Math.abs(p.bbox[1] - prev.y) < 100
+                    );
+                    const stillVisible = currentObjects.some(curr => 
+                        curr.label === prev.label && 
+                        Math.abs(curr.x - prev.x) < 50 && 
+                        Math.abs(curr.y - prev.y) < 50
+                    );
+                    if (wasNearPerson && !stillVisible) {
+                        suspiciousState = true;
+                        suspiciousMessage = `Suspicious: ${prev.label} may have been pocketed!`;
+                    }
+                });
+            }
 
-            prevObjects = currentObjects; // Update previous objects
+            prevObjects = currentObjects;
 
-            output.textContent = message;
-            output.style.color = suspicious ? 'red' : 'green';
+            // Display persistent message
+            output.textContent = suspiciousState ? suspiciousMessage : 'No suspicious behavior detected.';
+            output.style.color = suspiciousState ? 'red' : 'green';
 
             if (isDetecting) requestAnimationFrame(detectObjects);
         }
@@ -132,6 +136,13 @@
             isDetecting = !isDetecting;
             toggleBtn.textContent = isDetecting ? 'Stop Detection' : 'Start Detection';
             if (isDetecting && model) detectObjects();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            suspiciousState = false;
+            suspiciousMessage = 'No suspicious behavior detected.';
+            output.textContent = suspiciousMessage;
+            output.style.color = 'green';
         });
 
         window.onload = startCamera;
